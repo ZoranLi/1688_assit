@@ -177,7 +177,7 @@ function dealConfirmPage() {
         // }
 
 
-    }, getRandomFactor(1000))
+    }, getRandomFactor(500))
 
 }
 
