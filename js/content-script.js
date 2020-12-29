@@ -172,7 +172,8 @@ function dealConfirmPage() {
             if ($("[class='copy-address input lang-input']")[0]) {
                 $("[class='copy-address input lang-input']").click();
                 $("[class='copy-address input lang-input']").focus();
-                setKeywordText($("[class='copy-address input lang-input']")[0], '曾杏 江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城 15600277777')
+                // setKeywordText($("[class='copy-address input lang-input']")[0], '曾杏 江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城 15600277777')
+                setKeywordText($("[class='copy-address input lang-input']")[0], '曾杏 15979540486 江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城 ')
                 clearInterval(id)
                 delay(getRandomFactor(200)).then(function () {
                     let autoComplete = $('button:contains(自动匹配地址)');
