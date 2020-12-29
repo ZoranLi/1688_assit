@@ -13,16 +13,13 @@ document.addEventListener('DOMContentLoaded', function () {
 function dealDomain() {
     setTimeout(() => {
         if (location.host.includes('detail.1688.com')) {//1688网站
-
-            if (location.pathname.includes('offer')) {
+            setTimeout(() => {
                 dealGoodsDetail();
-            }
-
-            if (location.pathname.includes('/order/smart_make_order')) {
-                dealConfirmPage();
-            }
+            }, 4000)
+        } else if (location.host.includes('order.1688.com')) {
+            dealConfirmPage();
         }
-    }, 5000)
+    }, 1000)
 }
 
 /**
@@ -68,10 +65,119 @@ function dealGoodsDetail() {
 }
 
 /**
+ * 模拟键盘输入
+ * @param el
+ * @param text
+ */
+function setKeywordText(el, text) {
+    // var el = document.getElementById("gwt-debug-keywords-text-area");
+    el.value = text;
+    var evt = document.createEvent("Events");
+    evt.initEvent("change", true, true);
+    el.dispatchEvent(evt);
+}
+
+
+/**
  * 处理确认订单页面
  */
 function dealConfirmPage() {
     //使用临时地址
+    let tempAddress = $("a:contains(使用临时地址)");
+    setTimeout(() => {
+        if (tempAddress[0]) {
+            tempAddress[0].click();
+        }
+    }, getRandomFactor(300))
+
+    // 江西省	宜春市	袁州区	天宝路与高安路交汇处恒利·宜悦城
+
+    setTimeout(() => {
+        let receiverName = $("dt:contains(收货人)");
+        if (receiverName[0]) {
+            receiverName[0].parentElement.getElementsByTagName('input')[0].click();
+            receiverName[0].parentElement.getElementsByTagName('input')[0].focus();
+            // receiverName[0].parentElement.getElementsByTagName('input')[0].value = '曾杏'
+            setKeywordText(receiverName[0].parentElement.getElementsByTagName('input')[0], '曾杏');
+            receiverName[0].click();
+        }
+        //选择区域
+        let area = $("dt:contains(所在地区)");
+        if (area[0]) {
+            area[0].parentElement.getElementsByTagName('input')[0].click();
+            delay(getRandomFactor(100)).then(function () {
+                let providence = $("a:contains(江西省)");
+                providence[0].click();
+                delay(getRandomFactor(100)).then(() => {
+                    let city = $("a:contains(宜春市)");
+                    city[0].click();
+                    delay(getRandomFactor(100),30).then(function () {
+                        let distinct = $("a:contains(袁州区)");
+                        distinct[0].click();
+                        delay(getRandomFactor(100),30).then(function () {
+                            let sure = $("a:contains(确定)");
+                            sure[0].click();
+
+                            delay(getRandomFactor(100),30).then(function () {
+                                //详细地址
+                                let detailAddress = $("dt:contains(详细地址)");
+                                if (detailAddress[0]) {
+                                    detailAddress[0].parentElement.getElementsByTagName('textarea')[0].click();
+                                    detailAddress[0].parentElement.getElementsByTagName('textarea')[0].focus();
+                                    // $("[class='input lang-input input-address']").val(" 天宝路与高安路交汇处恒利·宜悦城 ");
+                                    setKeywordText($("[class='input lang-input input-address']")[0], '天宝路与高安路交汇处恒利·宜悦城')
+                                    detailAddress[0].click();
+                                }
+
+                                delay(getRandomFactor(200),30).then(function () {
+                                    let mobile = $("dt:contains(手机)");
+                                    if (mobile[0]) {
+                                        mobile[0].parentElement.getElementsByTagName('input')[0].click();
+                                        mobile[0].parentElement.getElementsByTagName('input')[0].focus();
+                                        // mobile[0].parentElement.getElementsByTagName('input')[0].value = '15600277777 '
+                                        setKeywordText(mobile[0].parentElement.getElementsByTagName('input')[0], '15600277777')
+                                        mobile[0].click();
+                                    }
+                                });
+                                delay(getRandomFactor(400),30).then(function () {
+                                    // 确认收货信息
+                                    // let receiveInfo = $("[class='button lang-button button-stress button-important save']");
+                                    // receiveInfo[0].click();
+                                    let receiveInfo = $("a:contains(确认收货信息)");
+                                    receiveInfo[1].click();
+                                })
+                            })
+
+                        })
+                    })
+                });
+            });
+        }
+        ;
+
+
+        // setTimeout(() => {
+        //     $("[class='copy-address input lang-input']").click();
+        //     $("[class='copy-address input lang-input']").focus();
+        //     setTimeout(() => {
+        //         $("[class='copy-address input lang-input']").val('江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城')
+        //         var e = jQuery.Event("keypress");
+        //         $("[class='copy-address input lang-input']").trigger(e);
+        //     }, 1000)
+        //
+        // }, 1000)
+        // let autoComplete = $('button:contains(自动匹配地址)');
+        // if (autoComplete[0]) {
+        //
+        // }
+
+        // let area = $("dt:contains(所在地区)");
+        // if (area[0]) {
+        //     area[0].parentElement.getElementsByTagName('input')[0].value = '江西省\t宜春市\t袁州区'
+        // }
+
+
+    }, getRandomFactor(1000))
 
 }
 
