@@ -5,6 +5,7 @@ const BASIC_URL = 'http://apis.xiaohongchun.com/';//点击默认随机因子
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('1688购物插件');
+    readExcel();
     $(document).ready(function () {
         dealDomain();
     });
@@ -26,39 +27,51 @@ function dealDomain() {
  * 处理商品详情页面
  */
 function dealGoodsDetail() {
-    // $("body").append(inntHtml);
     let tableSku = $(".table-sku");
     let tbody = tableSku ? tableSku.children() : null;
-    let attribute = tbody.children().get(0).getAttribute('data-sku-config');
-    //"{"skuName":"奶油白","isMix":"false","max":"21771","min":"0","mixAmount":"0","mixNumber":"0","mixBegin":"0","wsRuleUnit":"","wsRuleNum":""}"
-    //获取规格信息
-    // JSON.parse(tbody.children().get(0).getAttribute('data-sku-config'))['skuName']
-    //
-    // tbody.children().get(0).getElementsByTagName('input')
-
+    let end;
+    tbody.children().each(function (e) {
+        if (!end) {
+            let attrValue = $(this).attr('data-sku-config');//获取规格信息
+            let skuInfo = JSON.parse(attrValue);
+            //"{"skuName":"奶油白","isMix":"false","max":"21771","min":"0","mixAmount":"0","mixNumber":"0","mixBegin":"0","wsRuleUnit":"","wsRuleNum":""}"
+            if (skuInfo.skuName && skuInfo.skuName.includes('透明') && skuInfo.max > 1) { //是透明色的
+                $(this)[0].getElementsByClassName('amount-up')[0].click()
+                end = true;
+            }
+        }
+    });
 
     if (tbody) {
-        let count = tbody.children().length;
-        // tbody.children().get(0).getElementsByTagName('input')[0].click();
-
-        // setTimeout(() => {
-        //     $('.obj-expand').click()
-        // }, getRandomFactor(1000))
-        //
-        setTimeout(() => {
-            tbody.children().get(0).getElementsByClassName('amount-up')[0].click()
-        }, getRandomFactor(1000))
-
-        // tbody.children().get(0).getElementsByTagName('input')[0].value = 3 //第一个规格设置为3
-
-        // tbody.children().get(count - 1).getElementsByTagName('input')[0].value = 5 //第一个规格设置为3
-
-        let orderNow = $("span:contains(立即订购)");
-        if (orderNow) {
-            setTimeout(() => {
-                orderNow.parent()[0].click();
-            }, getRandomFactor(1000))
+        //加入进货单 当前要是组套就加入进货单
+        let addPurchase = $("span:contains(加入进货单)");
+        if (addPurchase) {
+            delay(200).then(function () {
+                addPurchase.parent()[0].click();
+            })
         }
+        ;
+
+
+        //TODO 去结算
+        let settlementInt = setInterval(() => {
+            //去结算
+            let toSettlement = $("a:contains(去结算)");
+            if (toSettlement && toSettlement.is(":visible")) {
+                delay(200).then(function () {
+                    toSettlement[0].click()
+                });
+                clearInterval(settlementInt)
+            }
+        }, 200)
+
+        //TODO 立即订购 当前要是单品就直接订购
+        // let orderNow = $("span:contains(立即订购)");
+        // if (orderNow) {
+        //     setTimeout(() => {
+        //         orderNow.parent()[0].click();
+        //     }, getRandomFactor(1000))
+        // }
     }
 
 
@@ -77,83 +90,17 @@ function setKeywordText(el, text) {
     el.dispatchEvent(evt);
 }
 
-
 /**
- * 单独处理每一项
- *
- *
- *   let tempAddress = $("a:contains(使用临时地址)");
- setTimeout(() => {
-         if (tempAddress[0]) {
-             tempAddress[0].click();
-         }
-     }, getRandomFactor(300))
-
- // 江西省    宜春市    袁州区    天宝路与高安路交汇处恒利·宜悦城
-
- setTimeout(() => {
-         let receiverName = $("dt:contains(收货人)");
-         if (receiverName[0]) {
-             receiverName[0].parentElement.getElementsByTagName('input')[0].click();
-             receiverName[0].parentElement.getElementsByTagName('input')[0].focus();
-             // receiverName[0].parentElement.getElementsByTagName('input')[0].value = '曾杏'
-             setKeywordText(receiverName[0].parentElement.getElementsByTagName('input')[0], '曾杏');
-             receiverName[0].click();
-         }
-         //选择区域
-         let area = $("dt:contains(所在地区)");
-         if (area[0]) {
-             area[0].parentElement.getElementsByTagName('input')[0].click();
-             delay(getRandomFactor(100)).then(function () {
-                 let providence = $("a:contains(江西省)");
-                 providence[0].click();
-                 delay(getRandomFactor(100)).then(() => {
-                     let city = $("a:contains(宜春市)");
-                     city[0].click();
-                     delay(getRandomFactor(100),30).then(function () {
-                         let distinct = $("a:contains(袁州区)");
-                         distinct[0].click();
-                         delay(getRandomFactor(100),30).then(function () {
-                             let sure = $("a:contains(确定)");
-                             sure[0].click();
-
-                             delay(getRandomFactor(100),30).then(function () {
-                                 //详细地址
-                                 let detailAddress = $("dt:contains(详细地址)");
-                                 if (detailAddress[0]) {
-                                     detailAddress[0].parentElement.getElementsByTagName('textarea')[0].click();
-                                     detailAddress[0].parentElement.getElementsByTagName('textarea')[0].focus();
-                                     // $("[class='input lang-input input-address']").val(" 天宝路与高安路交汇处恒利·宜悦城 ");
-                                     setKeywordText($("[class='input lang-input input-address']")[0], '天宝路与高安路交汇处恒利·宜悦城')
-                                     detailAddress[0].click();
-                                 }
-
-                                 delay(getRandomFactor(200),30).then(function () {
-                                     let mobile = $("dt:contains(手机)");
-                                     if (mobile[0]) {
-                                         mobile[0].parentElement.getElementsByTagName('input')[0].click();
-                                         mobile[0].parentElement.getElementsByTagName('input')[0].focus();
-                                         // mobile[0].parentElement.getElementsByTagName('input')[0].value = '15600277777 '
-                                         setKeywordText(mobile[0].parentElement.getElementsByTagName('input')[0], '15600277777')
-                                         mobile[0].click();
-                                     }
-                                 });
-                                 delay(getRandomFactor(400),30).then(function () {
-                                     // 确认收货信息
-                                     // let receiveInfo = $("[class='button lang-button button-stress button-important save']");
-                                     // receiveInfo[0].click();
-                                     let receiveInfo = $("a:contains(确认收货信息)");
-                                     receiveInfo[1].click();
-                                 })
-                             })
-
-                         })
-                     })
-                 });
-             });
-         }
-         ;
+ * 读取excel文件
  */
+function readExcel() {
+    $.getJSON(chrome.extension.getURL("order_list.json"), {}, function (data) {
+        // alert(JSON.stringify(data))
+        chrome.storage.local.set({"ORDER_LIST": JSON.stringify(data)}, function () {
+            console.log('Value is set to' + did);
+        });
+    })
+}
 
 
 /**
@@ -190,8 +137,8 @@ function dealConfirmPage() {
                                 detailAddress[0].click();
                                 delay(getRandomFactor(300)).then(function () {
                                     //TODO 确认收货
-                                    // let receiveInfo = $("a:contains(确认收货信息)");
-                                    // receiveInfo[1].click();
+                                    let receiveInfo = $("a:contains(确认收货信息)");
+                                    receiveInfo[1].click();
                                 })
                             }
                         });
@@ -305,7 +252,7 @@ async function setDidKey() {
     // /**
     //  * 读取本地文件
     //  */
-    // $.getJSON(chrome.extension.getURL("goods_list.json"), {}, function (data) {
+    // $.getJSON(chrome.extension.getURL("order_list.json"), {}, function (data) {
     //     chrome.storage.local.set({"STORAGE_GOOODS_LIST": JSON.stringify(data)}, function () {
     //         console.log('Value is set to' + did);
     //     });
