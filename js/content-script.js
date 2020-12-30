@@ -19,9 +19,37 @@ function dealDomain() {
             }, 4000)
         } else if (location.host.includes('order.1688.com')) {
             dealConfirmPage();
+        } else if (location.host.includes('cart.1688.com')) {
+            dealCartPage()
         }
     }, 1000)
 }
+
+
+/**
+ * 处理结算单页面
+ */
+function dealCartPage() {
+
+    //全选
+    let checkAllBox = $('.lang-checkbox')[0];
+    if (checkAllBox) {
+        checkAllBox.getElementsByTagName('label')[0].click();
+    }
+
+    // 删除  清空页面
+    // let deleteAll = $("a:contains(删除)");
+    // delay(200).then(function () {
+    //     deleteAll[0].click();
+    // })
+
+    //去结算
+    let submit = $("button:contains(结算)");
+    if (submit) {
+        submit[0].click();
+    }
+}
+
 
 /**
  * 处理商品详情页面
