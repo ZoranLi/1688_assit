@@ -2,32 +2,18 @@
   {
     "goods_name": "【暖冬新款】韩式毛毛抓夹4个9.9",
     "sku_list": [
-      {
-        "透明": "https://detail.1688.com/offer/628338995977.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      },
-      {
-        "珍珠矩形透明": "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      },
-      {
-        "粉色/姜黄色/米白色/灰色/蓝色/米咖色/果绿色": "https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      },
-      {
-        "大号半圆带耳朵": "https://detail.1688.com/offer/631894646191.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      }
+      "https://detail.1688.com/offer/628338995977.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=透明",
+      "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明",
+      "https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=粉色",
+      "https://detail.1688.com/offer/631894646191.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=大号半圆带耳朵"
     ]
   },
   {
     "goods_name": "【气质仙女】韩式毛毛抓夹4个9.9",
     "sku_list": [
-      {
-        "珍珠矩形透明": "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      },
-      {
-        "粉色/姜黄色/米白色/灰色/蓝色/米咖色/果绿色": "https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      },
-      {
-        "热卖珍珠两件套": "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP"
-      }
+      "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明",
+      "https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=粉色",
+      "https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=热卖珍珠两件套"
     ]
   }
 ]

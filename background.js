@@ -1,48 +1,8 @@
 chrome.runtime.onMessage.addListener(function (message, callback, sendResponse) {
     if (message.type === "close") {
-        // chrome.tabs.getSelected(null, function (tab) {
-        //     chrome.tabs.remove(tab.id);
-        // });
-        //关闭窗口
-        // chrome.tabs.remove(message.tabId);
-        getLocalStorageValue("STORAGE_GOOODS_LIST").then(resp => {
-            if (resp && resp["STORAGE_GOOODS_LIST"]) {
-                let goodsList = resp["STORAGE_GOOODS_LIST"]
-                // let index = goodsList.findIndex((e) => parseQuery(e).did === message.did);
-                let index = -1;
-                goodsList.map((ele, anchor) => {
-                    if (parseQuery(ele).did === message.did) {
-                        index = anchor
-                    }
-                });
-
-                if (index === goodsList.length - 1 || index === null) { // 爬到最后一条清数据 //如果没找到
-                    chrome.storage.local.set({"STORAGE_GOOODS_LIST": null}, function () {
-                    });
-                } else {
-                    deleteElement(message.did)
-                }
-                if (goodsList && goodsList.length && index < goodsList.length - 1) {
-                    setTimeout(() => {
-                        let url = goodsList[index + 1];
-                        if (url) {
-                            // chrome.tabs.create({url: url, active: false});
-                            chrome.tabs.update(message.tabId, {url: url})
-                        }
-                    }, 1500)
-                } else {
-                    chrome.storage.local.set({"STORAGE_DID": null,}, function () {
-                    });
-                    setTimeout(() => {
-                        chrome.tabs.remove(message.tabId);
-                    }, 3000)
-                }
-            }
-        });
-        // if (typeof goodsList === 'string') {
-        //     goodsList = JSON.parse(goodsList)
-        // }
-        // alert(JSON.stringify(goodsList))
+        chrome.tabs.remove(message.tabId);
+    } else if (message.type === "update") {
+        chrome.tabs.update(message.tabId, {url: message.url})
     }
 });
 

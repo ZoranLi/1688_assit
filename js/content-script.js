@@ -10,13 +10,46 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+/**
+ * 格式化queryparams 获取 refer中的ID
+ * @param str
+ * @returns {{}}
+ */
+function parseQuery(str) {
+    if (typeof str != "string" || str.length == 0) return {};
+    if (str.includes('?')) {
+        str = str.split('?')[1]
+    }
+    var s = str.split("&");
+    var s_length = s.length;
+    var bit, query = {}, first, second;
+    for (var i = 0; i < s_length; i++) {
+        bit = s[i].split("=");
+        first = decodeURIComponent(bit[0]);
+        if (first.length == 0) continue;
+        second = decodeURIComponent(bit[1]);
+        if (typeof query[first] == "undefined") query[first] = second;
+        else if (query[first] instanceof Array) query[first].push(second);
+        else query[first] = [query[first], second];
+    }
+    return query;
+}
+
 function dealDomain() {
     setTimeout(() => {
         if (location.host.includes('detail.1688.com')) {//1688网站
-            readExcel();
-            setTimeout(() => {
-                dealGoodsDetail();
-            }, 4000)
+            let query = parseQuery(location.href);
+            if (query.guige) {
+                // getLocalStorageValue("ORDER_LIST").then(orderListResp => {
+                //     if (!orderListResp) {
+                //         readExcel();
+                //     }
+                // });
+                readExcel();
+                setTimeout(() => {
+                    dealGoodsDetail(query.guige);
+                }, 4000)
+            }
         } else if (location.host.includes('order.1688.com')) {
             dealConfirmPage();
         } else if (location.host.includes('cart.1688.com')) {
@@ -53,7 +86,7 @@ function dealCartPage() {
 /**
  * 处理商品详情页面
  */
-function dealGoodsDetail() {
+function dealGoodsDetail(guige) {
     let tableSku = $(".table-sku");
     let tbody = tableSku ? tableSku.children() : null;
     let end;
@@ -62,13 +95,12 @@ function dealGoodsDetail() {
             let attrValue = $(this).attr('data-sku-config');//获取规格信息
             let skuInfo = JSON.parse(attrValue);
             //"{"skuName":"奶油白","isMix":"false","max":"21771","min":"0","mixAmount":"0","mixNumber":"0","mixBegin":"0","wsRuleUnit":"","wsRuleNum":""}"
-            if (skuInfo.skuName && skuInfo.skuName.includes('透明') && skuInfo.max > 1) { //是透明色的
+            if (skuInfo.skuName && skuInfo.skuName.includes(guige) && skuInfo.max > 1) { //是透明色的
                 $(this)[0].getElementsByClassName('amount-up')[0].click()
                 end = true;
             }
         }
     });
-
     if (tbody) {
         //加入进货单 当前要是组套就加入进货单
         let addPurchase = $("span:contains(加入进货单)");
@@ -76,20 +108,54 @@ function dealGoodsDetail() {
             delay(200).then(function () {
                 addPurchase.parent()[0].click();
             })
-        };
+        }
+        delay(500).then(function () {
+            getLocalStorageValue("WAITING_LIST").then(waittingResp => {
+                waittingResp = waittingResp['WAITING_LIST']
+                if (waittingResp && waittingResp.length) {
 
+                    let index = waittingResp.findIndex(g => g === decodeURI(location.href))
+                    if (index !== -1) {
+                        waittingResp = waittingResp.slice(index + 1);
+                    }
 
-        //TODO 去结算
-        let settlementInt = setInterval(() => {
-            //去结算
-            let toSettlement = $("a:contains(去结算)");
-            if (toSettlement && toSettlement.is(":visible")) {
-                delay(200).then(function () {
-                    toSettlement[0].click()
-                });
-                clearInterval(settlementInt)
-            }
-        }, 200)
+                    if (waittingResp && waittingResp.length) {
+                        chrome.storage.local.set({"WAITING_LIST": waittingResp}, function () {
+
+                            delay(getRandomFactor(2000)).then(function () {
+                                chrome.extension.sendMessage({type: 'update', url: waittingResp[0]}, function (res) {//关闭当前页面 抓取下一个
+                                });
+                            })
+
+                        });
+                    } else {
+                        // 去结算
+                        let settlementInt = setInterval(() => {
+                            //去结算
+                            let toSettlement = $("a:contains(去结算)");
+                            if (toSettlement && toSettlement.is(":visible")) {
+                                delay(200).then(function () {
+                                    toSettlement[0].click()
+                                });
+                                clearInterval(settlementInt)
+                            }
+                        }, 200)
+                    }
+                } else {
+                    // 去结算
+                    let settlementInt = setInterval(() => {
+                        //去结算
+                        let toSettlement = $("a:contains(去结算)");
+                        if (toSettlement && toSettlement.is(":visible")) {
+                            delay(200).then(function () {
+                                toSettlement[0].click()
+                            });
+                            clearInterval(settlementInt)
+                        }
+                    }, 200)
+                }
+            })
+        })
 
         //TODO 立即订购 当前要是单品就直接订购
         // let orderNow = $("span:contains(立即订购)");
@@ -120,10 +186,49 @@ function setKeywordText(el, text) {
  * 读取excel文件
  */
 function readExcel() {
-    $.getJSON(chrome.extension.getURL("order_list.json"), {}, function (data) {
-        // alert(JSON.stringify(data))
-        chrome.storage.local.set({"ORDER_LIST": JSON.stringify(data)}, function () {
-        });
+    getLocalStorageValue("ORDER_LIST").then(orderListResp => {
+        $.getJSON(chrome.extension.getURL("order_list.json"), null, function (data) {
+            chrome.storage.local.set({"ORDER_LIST": data, "CURRENT_ORDER": data[0]}, function () {
+            });
+
+            let goodsName = data[0].goods_name;
+            let guigeName = data[0].guige_name;//规格
+            let guige = guigeName.substring(0, 2);//1688上的规格
+
+            let regex = /\【(.+?)\】/g;
+            let matchKey = goodsName.match(regex)[0];//取出【暖冬新款】
+
+            $.getJSON(chrome.extension.getURL("url_list.json"), null, urlObj => {
+                let objList = urlObj.filter(g => g.goods_name.includes(matchKey));
+                if (objList && objList.length) {
+                    let waitingList = objList[0].sku_list
+
+                    let index = waitingList.findIndex(g => g === decodeURI(location.href))
+                    if (index !== -1) {
+                        waitingList = waitingList.slice(index + 1)
+                    }
+
+                    chrome.storage.local.set({"WAITING_LIST": waitingList}, function () {
+                    });
+
+                    // if (waitingList && waitingList.length) {
+                    //     //在当前页面,打开第一个页面
+                    //     getCurrentTabId().then(tabId => {
+                    //         chrome.extension.sendMessage({type: 'update', url: waitingList[0]}, function (res) {//关闭当前页面 抓取下一个
+                    //
+                    //         });
+                    //     });
+                    // }
+
+                    //需要添加到购物车里边的商品
+                    // getLocalStorageValue("WAITING_LIST").then(resp => {
+                    //     resp = resp['WAITING_LIST']
+                    //     alert(JSON.stringify(resp))
+                    // })
+                }
+            })
+
+        })
     })
 }
 
@@ -303,27 +408,4 @@ function getRandomFactor(time = BASIC_TIME, factor = BASIC_FACTOR) {
     return time + random * factor;
 }
 
-/**
- * 格式化queryparams 获取 refer中的ID
- * @param str
- * @returns {{}}
- */
-function parseQuery(str) {
-    if (typeof str != "string" || str.length == 0) return {};
-    if (str.includes('?')) {
-        str = str.split('?')[1]
-    }
-    var s = str.split("&");
-    var s_length = s.length;
-    var bit, query = {}, first, second;
-    for (var i = 0; i < s_length; i++) {
-        bit = s[i].split("=");
-        first = decodeURIComponent(bit[0]);
-        if (first.length == 0) continue;
-        second = decodeURIComponent(bit[1]);
-        if (typeof query[first] == "undefined") query[first] = second;
-        else if (query[first] instanceof Array) query[first].push(second);
-        else query[first] = [query[first], second];
-    }
-    return query;
-}
+
