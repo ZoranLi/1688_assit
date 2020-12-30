@@ -30,7 +30,6 @@ function dealDomain() {
  * 处理结算单页面
  */
 function dealCartPage() {
-
     //全选
     let checkAllBox = $('.lang-checkbox')[0];
     if (checkAllBox) {
