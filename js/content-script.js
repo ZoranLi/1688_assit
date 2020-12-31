@@ -51,6 +51,17 @@ async function dealDomain() {
             dealConfirmPage();
         } else if (location.host.includes('cart.1688.com')) {
             dealCartPage()
+        }else if(location.host.includes('trade.1688.com')){
+            getLocalStorageValue("CURRENT_ORDER").then(currentOrderResp => {
+                currentOrderResp = currentOrderResp['CURRENT_ORDER']
+                delay(getRandomFactor(1000)).then(function () {
+                    chrome.extension.sendMessage({
+                        type: 'update',
+                        url: currentOrderResp.sku_list[0]
+                    }, function (res) {//关闭当前页面 抓取下一个
+                    });
+                })
+            })
         }
     }, 1000)
 }
@@ -92,7 +103,7 @@ function dealGoodsDetail(guige) {
             let attrValue = $(this).attr('data-sku-config');//获取规格信息
             let skuInfo = JSON.parse(attrValue);
             //"{"skuName":"奶油白","isMix":"false","max":"21771","min":"0","mixAmount":"0","mixNumber":"0","mixBegin":"0","wsRuleUnit":"","wsRuleNum":""}"
-            if (skuInfo.skuName && skuInfo.skuName.includes(guige) && skuInfo.max > 1) { //是透明色的
+            if (skuInfo.skuName && skuInfo.skuName === (guige) && skuInfo.max > 1) { //是透明色的
                 $(this)[0].getElementsByClassName('amount-up')[0].click()
                 end = true;
             }
@@ -116,7 +127,6 @@ function dealGoodsDetail(guige) {
                         list = list.slice(index + 1);
                     }
                     currentOrderResp.sku_list = list;
-                    debugger
                     if (list && list.length) {
                         chrome.storage.local.set({"CURRENT_ORDER": currentOrderResp}, function () {
                             delay(getRandomFactor(2000)).then(function () {
@@ -260,7 +270,7 @@ function dealConfirmPage() {
                         let autoComplete = $('button:contains(自动匹配地址)');
                         if (autoComplete[0]) {
                             autoComplete[0].click();
-                            //TODO 兼容详细地址会错的问题，需要将Excel中详细地址取出来单独设置一下
+                            // 兼容详细地址会错的问题，需要将Excel中详细地址取出来单独设置一下
                             delay(getRandomFactor(200)).then(function () {
                                 let detailAddress = $("dt:contains(详细地址)");
                                 if (detailAddress[0]) {
@@ -269,9 +279,38 @@ function dealConfirmPage() {
                                     setKeywordText($("[class='input lang-input input-address']")[0], `${currentOrderResp.detail}`)
                                     detailAddress[0].click();
                                     delay(getRandomFactor(300)).then(function () {
-                                        //TODO 确认收货
+                                        // 确认收货
                                         let receiveInfo = $("a:contains(确认收货信息)");
                                         receiveInfo[1].click();
+
+                                        getLocalStorageValue("ORDER_LIST").then(orderListResp => {
+                                            // chrome.storage.local.set({"ORDER_LIST": null, "CURRENT_ORDER": null}, function () {
+                                            // });
+                                            let orderList = orderListResp["ORDER_LIST"];
+                                            getLocalStorageValue("CURRENT_ORDER").then(order => {
+                                                let dealOrder = order["CURRENT_ORDER"];
+                                                let index = orderList.findIndex(g => g.oid === dealOrder.oid)
+                                                if (index !== -1) {
+                                                    orderList.splice(index, 1)
+                                                }
+
+
+                                                //删除已经完成的元素，再提交订单
+                                                chrome.storage.local.set({
+                                                    "ORDER_LIST": orderList,
+                                                    "CURRENT_ORDER": orderList[0]
+                                                }, function () {
+                                                    delay(getRandomFactor(200)).then(() => {
+                                                        //提交订单
+                                                        let commitOrder = $("a:contains(提交订单)");
+                                                        commitOrder[0].click();
+                                                    });
+                                                });
+
+                                            })
+                                        });
+
+
                                     })
                                 }
                             });
