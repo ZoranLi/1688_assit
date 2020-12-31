@@ -1,4 +1,4 @@
-const BASIC_TIME = 2200; //点击默认基础操作时间
+const BASIC_TIME = 1200; //点击默认基础操作时间
 const BASIC_FACTOR = 400;//点击默认随机因子
 const BASIC_URL = 'http://apis.xiaohongchun.com/';//点击默认随机因子
 // const BASIC_URL = 'http://api.tiantiandr.cn/';//点击默认随机因子
@@ -35,20 +35,17 @@ function parseQuery(str) {
     return query;
 }
 
-function dealDomain() {
+let query = parseQuery(location.href);
+
+async function dealDomain() {
     setTimeout(() => {
         if (location.host.includes('detail.1688.com')) {//1688网站
-            let query = parseQuery(location.href);
-            if (query.guige) {
-                // getLocalStorageValue("ORDER_LIST").then(orderListResp => {
-                //     if (!orderListResp) {
-                //         readExcel();
-                //     }
-                // });
-                readExcel();
-                setTimeout(() => {
-                    dealGoodsDetail(query.guige);
-                }, 4000)
+            if (query.guige && query.oid && query.category) {
+                readExcel().then(resp => {
+                    setTimeout(() => {
+                        dealGoodsDetail(query.guige);
+                    }, 4000)
+                })
             }
         } else if (location.host.includes('order.1688.com')) {
             dealConfirmPage();
@@ -105,31 +102,33 @@ function dealGoodsDetail(guige) {
         //加入进货单 当前要是组套就加入进货单
         let addPurchase = $("span:contains(加入进货单)");
         if (addPurchase) {
-            delay(200).then(function () {
+            delay(getRandomFactor(200)).then(function () {
                 addPurchase.parent()[0].click();
             })
         }
-        delay(500).then(function () {
-            getLocalStorageValue("WAITING_LIST").then(waittingResp => {
-                waittingResp = waittingResp['WAITING_LIST']
-                if (waittingResp && waittingResp.length) {
-
-                    let index = waittingResp.findIndex(g => g === decodeURI(location.href))
+        delay(getRandomFactor(500)).then(function () {
+            getLocalStorageValue("CURRENT_ORDER").then(currentOrderResp => {
+                currentOrderResp = currentOrderResp['CURRENT_ORDER']
+                if (currentOrderResp) {
+                    let list = currentOrderResp.sku_list
+                    let index = list.findIndex(g => g === decodeURI(location.href))
                     if (index !== -1) {
-                        waittingResp = waittingResp.slice(index + 1);
+                        list = list.slice(index + 1);
                     }
-
-                    if (waittingResp && waittingResp.length) {
-                        chrome.storage.local.set({"WAITING_LIST": waittingResp}, function () {
-
+                    currentOrderResp.sku_list = list;
+                    if (list && list.length) {
+                        chrome.storage.local.set({"CURRENT_ORDER": currentOrderResp}, function () {
                             delay(getRandomFactor(2000)).then(function () {
-                                chrome.extension.sendMessage({type: 'update', url: waittingResp[0]}, function (res) {//关闭当前页面 抓取下一个
+                                chrome.extension.sendMessage({
+                                    type: 'update',
+                                    url: currentOrderResp.sku_list[0]
+                                }, function (res) {//关闭当前页面 抓取下一个
                                 });
                             })
 
                         });
                     } else {
-                        // 去结算
+                        // // 去结算
                         let settlementInt = setInterval(() => {
                             //去结算
                             let toSettlement = $("a:contains(去结算)");
@@ -142,17 +141,18 @@ function dealGoodsDetail(guige) {
                         }, 200)
                     }
                 } else {
+                    alert("currentOrderResp为空")
                     // 去结算
-                    let settlementInt = setInterval(() => {
-                        //去结算
-                        let toSettlement = $("a:contains(去结算)");
-                        if (toSettlement && toSettlement.is(":visible")) {
-                            delay(200).then(function () {
-                                toSettlement[0].click()
-                            });
-                            clearInterval(settlementInt)
-                        }
-                    }, 200)
+                    // let settlementInt = setInterval(() => {
+                    //     //去结算
+                    //     let toSettlement = $("a:contains(去结算)");
+                    //     if (toSettlement && toSettlement.is(":visible")) {
+                    //         delay(200).then(function () {
+                    //             toSettlement[0].click()
+                    //         });
+                    //         clearInterval(settlementInt)
+                    //     }
+                    // }, 200)
                 }
             })
         })
@@ -186,50 +186,53 @@ function setKeywordText(el, text) {
  * 读取excel文件
  */
 function readExcel() {
-    getLocalStorageValue("ORDER_LIST").then(orderListResp => {
-        $.getJSON(chrome.extension.getURL("order_list.json"), null, function (data) {
-            chrome.storage.local.set({"ORDER_LIST": data, "CURRENT_ORDER": data[0]}, function () {
-            });
-
-            let goodsName = data[0].goods_name;
-            let guigeName = data[0].guige_name;//规格
-            let guige = guigeName.substring(0, 2);//1688上的规格
-
-            let regex = /\【(.+?)\】/g;
-            let matchKey = goodsName.match(regex)[0];//取出【暖冬新款】
-
-            $.getJSON(chrome.extension.getURL("url_list.json"), null, urlObj => {
-                let objList = urlObj.filter(g => g.goods_name.includes(matchKey));
-                if (objList && objList.length) {
-                    let waitingList = objList[0].sku_list
-
-                    let index = waitingList.findIndex(g => g === decodeURI(location.href))
-                    if (index !== -1) {
-                        waitingList = waitingList.slice(index + 1)
-                    }
-
-                    chrome.storage.local.set({"WAITING_LIST": waitingList}, function () {
+    return new Promise((resolve, reject) => {
+        try {
+            // chrome.storage.local.get(key, function (value) {
+            //     resolve(value);
+            // })
+            getLocalStorageValue("ORDER_LIST").then(orderListResp => {
+                if (query.clear_all) {
+                    chrome.storage.local.set({"ORDER_LIST": null, "CURRENT_ORDER": null}, function () {
                     });
-
-                    // if (waitingList && waitingList.length) {
-                    //     //在当前页面,打开第一个页面
-                    //     getCurrentTabId().then(tabId => {
-                    //         chrome.extension.sendMessage({type: 'update', url: waitingList[0]}, function (res) {//关闭当前页面 抓取下一个
-                    //
-                    //         });
-                    //     });
-                    // }
-
-                    //需要添加到购物车里边的商品
-                    // getLocalStorageValue("WAITING_LIST").then(resp => {
-                    //     resp = resp['WAITING_LIST']
-                    //     alert(JSON.stringify(resp))
-                    // })
                 }
-            })
+                if (orderListResp['ORDER_LIST'] && orderListResp['ORDER_LIST'].length) {
+                    resolve(orderListResp['ORDER_LIST']);
+                    return;
+                }
 
-        })
-    })
+                $.getJSON(chrome.extension.getURL("order_list.json"), null, function (data) {
+
+                    $.getJSON(chrome.extension.getURL("url_list.json"), null, urlObj => {
+                        data.map(g => {
+                            let skuList = [];
+                            if (g.goods_name && g.goods_name.includes('暖冬新款')) {
+                                skuList.push(`https://detail.1688.com/offer/628338995977.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=透明&oid=${g.oid}&category=暖冬新款`);
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明&oid=${g.oid}&category=暖冬新款`);
+                                skuList.push(`https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=${g.guige_name.substring(0, 2)}&oid=${g.oid}&category=暖冬新款`);
+                                skuList.push(`https://detail.1688.com/offer/631894646191.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=大号半圆带耳朵&oid=${g.oid}&category=暖冬新款`);
+                            } else if (g.goods_name.includes('气质仙女')) {
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明&category=气质仙女&oid=${g.oid}`)
+                                skuList.push(`https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=粉色&category=气质仙女&oid=${g.oid}`)
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=热卖珍珠两件套&category=气质仙女&oid=${g.oid}`)
+                            }
+                            g.sku_list = skuList;
+                        });
+                        console.log(JSON.stringify(data));
+                        chrome.storage.local.set({"ORDER_LIST": data, "CURRENT_ORDER": data[0]}, function () {
+                            resolve(data);
+                            // getLocalStorageValue("CURRENT_ORDER").then(resp => {
+                            //     resp = resp['CURRENT_ORDER'];
+                            // })
+                        });
+                    })
+                })
+            })
+        }
+        catch (ex) {
+            reject(ex);
+        }
+    });
 }
 
 
