@@ -215,13 +215,13 @@ function readExcel() {
                             let skuList = [];
                             if (g.goods_name && g.goods_name.includes('暖冬新款')) {
                                 skuList.push(`https://detail.1688.com/offer/628338995977.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=透明&oid=${g.oid}&category=暖冬新款`);
-                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明&oid=${g.oid}&category=暖冬新款`);
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=35#珍珠矩形透明&oid=${g.oid}&category=暖冬新款`);
                                 skuList.push(`https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=${g.guige_name.substring(0, 2)}&oid=${g.oid}&category=暖冬新款`);
                                 skuList.push(`https://detail.1688.com/offer/631894646191.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=大号半圆带耳朵&oid=${g.oid}&category=暖冬新款`);
                             } else if (g.goods_name.includes('气质仙女')) {
-                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=珍珠矩形透明&category=气质仙女&oid=${g.oid}`)
-                                skuList.push(`https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=粉色&category=气质仙女&oid=${g.oid}`)
-                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=热卖珍珠两件套&category=气质仙女&oid=${g.oid}`)
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=35#珍珠矩形透明&category=气质仙女&oid=${g.oid}`)
+                                skuList.push(`https://detail.1688.com/offer/631107062502.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=${g.guige_name.substring(0, 2)}&category=气质仙女&oid=${g.oid}`)
+                                skuList.push(`https://detail.1688.com/offer/629812993921.html?spm=a360q.8274423.0.0.50f94c9ak6fOaP&guige=24#热卖珍珠两件套&category=气质仙女&oid=${g.oid}`)
                             }
                             g.sku_list = skuList;
                         });
