@@ -51,7 +51,7 @@ async function dealDomain() {
             dealConfirmPage();
         } else if (location.host.includes('cart.1688.com')) {
             dealCartPage()
-        }else if(location.host.includes('trade.1688.com')){
+        } else if (location.host.includes('trade.1688.com')) {
             getLocalStorageValue("CURRENT_ORDER").then(currentOrderResp => {
                 currentOrderResp = currentOrderResp['CURRENT_ORDER']
                 delay(getRandomFactor(1000)).then(function () {
@@ -109,6 +109,10 @@ function dealGoodsDetail(guige) {
             }
         }
     });
+    if(!end){
+        return alert(`没有找到【${query.guige}】 规格`)
+    }
+
     if (tbody) {
         //加入进货单 当前要是组套就加入进货单
         let addPurchase = $("span:contains(加入进货单)");
@@ -124,7 +128,7 @@ function dealGoodsDetail(guige) {
                     let list = currentOrderResp.sku_list
                     let index = list.findIndex(g => decodeURI(location.href).includes(g));
                     if (index !== -1) {
-                        list = list.slice(index + 1);
+                        list.splice(index, 1);
                     }
                     currentOrderResp.sku_list = list;
                     if (list && list.length) {
