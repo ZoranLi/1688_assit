@@ -111,11 +111,12 @@ function dealGoodsDetail(guige) {
                 currentOrderResp = currentOrderResp['CURRENT_ORDER']
                 if (currentOrderResp) {
                     let list = currentOrderResp.sku_list
-                    let index = list.findIndex(g => g === decodeURI(location.href))
+                    let index = list.findIndex(g => decodeURI(location.href).includes(g));
                     if (index !== -1) {
                         list = list.slice(index + 1);
                     }
                     currentOrderResp.sku_list = list;
+                    debugger
                     if (list && list.length) {
                         chrome.storage.local.set({"CURRENT_ORDER": currentOrderResp}, function () {
                             delay(getRandomFactor(2000)).then(function () {
@@ -188,19 +189,15 @@ function setKeywordText(el, text) {
 function readExcel() {
     return new Promise((resolve, reject) => {
         try {
-            // chrome.storage.local.get(key, function (value) {
-            //     resolve(value);
-            // })
+            if (query.clear_all) {
+                chrome.storage.local.set({"ORDER_LIST": null, "CURRENT_ORDER": null}, function () {
+                });
+            }
             getLocalStorageValue("ORDER_LIST").then(orderListResp => {
-                if (query.clear_all) {
-                    chrome.storage.local.set({"ORDER_LIST": null, "CURRENT_ORDER": null}, function () {
-                    });
-                }
                 if (orderListResp['ORDER_LIST'] && orderListResp['ORDER_LIST'].length) {
                     resolve(orderListResp['ORDER_LIST']);
                     return;
                 }
-
                 $.getJSON(chrome.extension.getURL("order_list.json"), null, function (data) {
 
                     $.getJSON(chrome.extension.getURL("url_list.json"), null, urlObj => {
@@ -253,30 +250,34 @@ function dealConfirmPage() {
                 $("[class='copy-address input lang-input']").click();
                 $("[class='copy-address input lang-input']").focus();
                 // setKeywordText($("[class='copy-address input lang-input']")[0], '曾杏 江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城 15600277777')
-                setKeywordText($("[class='copy-address input lang-input']")[0], '曾杏 15979540486 江西省 宜春市 袁州区 天宝路与高安路交汇处恒利·宜悦城 ')
-                clearInterval(id)
-                delay(getRandomFactor(200)).then(function () {
-                    let autoComplete = $('button:contains(自动匹配地址)');
-                    if (autoComplete[0]) {
-                        autoComplete[0].click();
 
-                        //TODO 兼容详细地址会错的问题，需要将Excel中详细地址取出来单独设置一下
-                        delay(getRandomFactor(200)).then(function () {
-                            let detailAddress = $("dt:contains(详细地址)");
-                            if (detailAddress[0]) {
-                                detailAddress[0].parentElement.getElementsByTagName('textarea')[0].click();
-                                detailAddress[0].parentElement.getElementsByTagName('textarea')[0].focus();
-                                setKeywordText($("[class='input lang-input input-address']")[0], '天宝路与高安路交汇处恒利·宜悦城1111')
-                                detailAddress[0].click();
-                                delay(getRandomFactor(300)).then(function () {
-                                    //TODO 确认收货
-                                    let receiveInfo = $("a:contains(确认收货信息)");
-                                    receiveInfo[1].click();
-                                })
-                            }
-                        });
-                    }
-                });
+                getLocalStorageValue("CURRENT_ORDER").then(currentOrderResp => {
+                    currentOrderResp = currentOrderResp['CURRENT_ORDER']
+                    let address = `${currentOrderResp.receiver} ${currentOrderResp.mobile} ${currentOrderResp.province} ${currentOrderResp.city}  ${currentOrderResp.area} ${currentOrderResp.detail} `
+                    setKeywordText($("[class='copy-address input lang-input']")[0], address)
+                    clearInterval(id)
+                    delay(getRandomFactor(200)).then(function () {
+                        let autoComplete = $('button:contains(自动匹配地址)');
+                        if (autoComplete[0]) {
+                            autoComplete[0].click();
+                            //TODO 兼容详细地址会错的问题，需要将Excel中详细地址取出来单独设置一下
+                            delay(getRandomFactor(200)).then(function () {
+                                let detailAddress = $("dt:contains(详细地址)");
+                                if (detailAddress[0]) {
+                                    detailAddress[0].parentElement.getElementsByTagName('textarea')[0].click();
+                                    detailAddress[0].parentElement.getElementsByTagName('textarea')[0].focus();
+                                    setKeywordText($("[class='input lang-input input-address']")[0], `${currentOrderResp.detail}`)
+                                    detailAddress[0].click();
+                                    delay(getRandomFactor(300)).then(function () {
+                                        //TODO 确认收货
+                                        let receiveInfo = $("a:contains(确认收货信息)");
+                                        receiveInfo[1].click();
+                                    })
+                                }
+                            });
+                        }
+                    });
+                })
             }
         }, 500)
     }, 500)
